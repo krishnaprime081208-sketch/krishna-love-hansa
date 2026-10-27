@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Happy Birthday Hansa ❤️</title>
 
 <style>
@@ -16,6 +16,7 @@
 body {
   background: #050008;
   overflow: hidden;
+  width: 100%;
   height: 100vh;
   height: 100dvh;
   font-family: Arial, sans-serif;
@@ -30,49 +31,72 @@ canvas {
 
 .birthday {
   position: absolute;
-  bottom: 8%;
+  z-index: 2;
+  bottom: 7%;
   width: 100%;
-  padding: 0 10px;
+  padding: 10px;
   text-align: center;
-  color: #ffacd5;
-  font-size: clamp(23px, 6vw, 38px);
+  color: #ff9dcc;
+  font-size: clamp(22px, 6vw, 38px);
   font-weight: bold;
   letter-spacing: 2px;
-  text-shadow:
-    0 0 8px #ff168d,
-    0 0 22px #ff168d;
-  animation: birthdayGlow 1.8s ease-in-out infinite alternate;
+  text-shadow: 0 0 10px #ff168d, 0 0 25px #ff168d;
+  animation: glow 1.5s infinite alternate;
 }
 
-@keyframes birthdayGlow {
-  from {
-    opacity: 0.75;
-    transform: scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1.03);
-  }
+@keyframes glow {
+  from { opacity: 0.7; }
+  to { opacity: 1; }
 }
 </style>
 </head>
 
 <body>
 
-<canvas id="love"></canvas>
+<canvas id="heart"></canvas>
 
 <div class="birthday">
   HAPPY BIRTHDAY HANSA 🎂❤️
 </div>
 
 <script>
-const canvas = document.getElementById("love");
+const canvas = document.getElementById("heart");
 const ctx = canvas.getContext("2d");
 
-let W, H, dpr, scale, time = 0;
+let W, H, dpr, scale;
+let progress = 0;
+let lastTime = 0;
+let points = [];
+
+const TAU = Math.PI * 2;
+
+// Mathematical heart curve
+function heart(t) {
+  return {
+    x: 16 * Math.pow(Math.sin(t), 3),
+    y: -(13 * Math.cos(t)
+      - 5 * Math.cos(2 * t)
+      - 2 * Math.cos(3 * t)
+      - Math.cos(4 * t))
+  };
+}
+
+// Prepare the path for smooth text movement
+function createPath() {
+  points = [];
+
+  const count = 1200;
+
+  for (let i = 0; i <= count; i++) {
+    const t = (i / count) * TAU;
+    const p = heart(t);
+    points.push({ ...p, t });
+  }
+}
 
 function resize() {
   dpr = Math.min(window.devicePixelRatio || 1, 2);
+
   W = window.innerWidth;
   H = window.innerHeight;
 
@@ -81,90 +105,87 @@ function resize() {
 
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-  scale = Math.min(W / 38, H / 43, 15);
+  // Leave room for the birthday message
+  scale = Math.min(W / 39, H / 43, 16);
 
-  if (W < 500) scale *= 0.9;
+  createPath();
 }
 
-function heart(t) {
-  return {
-    x: 16 * Math.sin(t) ** 3,
-    y: -(13 * Math.cos(t)
-      - 5 * Math.cos(2 * t)
-      - 2 * Math.cos(3 * t)
-      - Math.cos(4 * t))
-  };
+// Draw a section of the heart using repeated words
+function drawHeartText(start, length) {
+  const count = points.length - 1;
+  const wordSpacing = 23;
+  const wordCount = Math.floor(length / wordSpacing);
+
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = "bold 11px Arial";
+
+  for (let i = 0; i < wordCount; i++) {
+    const distance = (start + i * wordSpacing) % count;
+    const p = points[Math.floor(distance)];
+    const next = points[Math.min(
+      Math.floor(distance) + 1, count
+    )];
+
+    const x = p.x * scale;
+    const y = p.y * scale;
+
+    const angle = Math.atan2(
+      (next.y - p.y) * scale,
+      (next.x - p.x) * scale
+    );
+
+    // Slightly brighten the moving tip
+    const alpha = 0.45 + 0.55 *
+      (i / Math.max(wordCount, 1));
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = "#ff9dcc";
+    ctx.shadowColor = "#ff168d";
+    ctx.shadowBlur = 7;
+
+    ctx.fillText("I love you", 0, 0);
+    ctx.restore();
+  }
 }
 
-function draw() {
+function animate(timestamp) {
+  if (!lastTime) lastTime = timestamp;
+
+  const delta = Math.min(timestamp - lastTime, 40);
+  lastTime = timestamp;
+
+  // Clear and redraw, creating the repeating drawing effect
   ctx.clearRect(0, 0, W, H);
-  time += 0.012;
+
+  const pathLength = points.length - 1;
+  const drawingSpeed = delta * 0.12;
+
+  progress = (progress + drawingSpeed) % pathLength;
 
   ctx.save();
 
-  // Keep the heart above the birthday message
-  ctx.translate(W / 2, H * 0.40);
-  ctx.scale(scale, scale);
+  // Center the heart in the upper portion of the screen
+  ctx.translate(W / 2, H * 0.39);
 
-  const count = 180;
-  const progress = (time * 0.7) % (Math.PI * 2);
-
-  for (let i = 0; i < count; i++) {
-    const t = (i / count * Math.PI * 2 + progress)
-      % (Math.PI * 2);
-
-    const p = heart(t);
-    const next = heart(t + 0.005);
-
-    const angle = Math.atan2(
-      next.y - p.y,
-      next.x - p.x
-    );
-
-    const glow = 0.55 + 0.45 *
-      Math.sin(t * 4 - time * 5) ** 2;
-
-    ctx.save();
-    ctx.translate(p.x, p.y);
-    ctx.rotate(angle);
-
-    ctx.globalAlpha = glow;
-    ctx.fillStyle = "#ff9dcc";
-    ctx.shadowColor = "#ff168d";
-    ctx.shadowBlur = 2;
-
-    ctx.font = "bold 0.75px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("I love you", 0, 0);
-
-    ctx.restore();
-  }
-
-  // Tiny glowing particles travel around the heart
-  for (let i = 0; i < 30; i++) {
-    const t = (time * 1.5 + i / 30 *
-      Math.PI * 2) % (Math.PI * 2);
-
-    const p = heart(t);
-
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 0.13, 0, Math.PI * 2);
-    ctx.fillStyle = "#ffffff";
-    ctx.shadowColor = "#ff168d";
-    ctx.shadowBlur = 6;
-    ctx.fill();
-  }
+  // A moving train of text travels along the heart curve.
+  // Its changing starting position creates continuous motion.
+  drawHeartText(progress, pathLength * 0.72);
 
   ctx.restore();
 
-  requestAnimationFrame(draw);
+  requestAnimationFrame(animate);
 }
 
 window.addEventListener("resize", resize);
 
 resize();
-draw();
+requestAnimationFrame(animate);
 </script>
 
 </body>
