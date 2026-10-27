@@ -1,156 +1,366 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Happy Birthday Hansa ❤️</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I Love You - Heart Animation</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Global styles for dark theme canvas rendering */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
 
-<style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
 
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: #080008;
-  font-family: Arial, sans-serif;
-}
+        /* Subtle glowing text animation for UI overlays */
+        .glow-text {
+            text-shadow: 0 0 10px rgba(255, 182, 193, 0.8), 0 0 20px rgba(255, 105, 180, 0.5);
+        }
 
-canvas {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.birthday {
-  position: fixed;
-  bottom: 7%;
-  left: 0;
-  width: 100%;
-  padding: 12px;
-  text-align: center;
-  color: #ffacd5;
-  font-size: clamp(21px, 5.5vw, 38px);
-  font-weight: bold;
-  letter-spacing: 1px;
-  text-shadow: 0 0 10px #ff168d, 0 0 25px #ff168d;
-  animation: glow 1.5s ease-in-out infinite alternate;
-}
-
-@keyframes glow {
-  from { opacity: 0.7; }
-  to { opacity: 1; }
-}
-</style>
+        /* Glassmorphism control panel */
+        .glass-panel {
+            background: rgba(15, 15, 20, 0.65);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 182, 193, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(255, 105, 180, 0.15);
+        }
+    </style>
 </head>
+<body class="bg-black text-white relative">
 
-<body>
+    <!-- Canvas for the animated heart and background particles -->
+    <canvas id="heartCanvas"></canvas>
 
-<canvas id="heart"></canvas>
+    <!-- Overlay UI Controls -->
+    <div class="absolute top-4 left-4 z-10 flex flex-wrap gap-3 items-center">
+        <button id="toggleControlsBtn" class="glass-panel text-pink-200 hover:text-white px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 flex items-center gap-2 cursor-pointer">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            <span>Customize</span>
+        </button>
+        <button id="replayBtn" class="glass-panel text-pink-200 hover:text-white px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 flex items-center gap-2 cursor-pointer">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+            <span>Redraw Heart</span>
+        </button>
+    </div>
 
-<div class="birthday">HAPPY BIRTHDAY HANSA 🎂❤️</div>
+    <!-- Hidden Customization Panel -->
+    <div id="controlsPanel" class="hidden absolute top-16 left-4 z-20 glass-panel p-5 rounded-2xl w-80 text-pink-100 space-y-4 transition-all duration-300">
+        <h3 class="text-lg font-bold text-pink-300 border-b border-pink-500/20 pb-2 flex justify-between items-center">
+            <span>Animation Settings</span>
+            <button id="closeControlsBtn" class="text-xs text-gray-400 hover:text-white">✕</button>
+        </h3>
+        
+        <div>
+            <label class="block text-xs uppercase tracking-wider text-pink-300 mb-1">Custom Message</label>
+            <input type="text" id="messageInput" value="I love you" class="w-full bg-black/50 border border-pink-500/30 rounded-lg px-3 py-1.5 text-sm text-pink-200 focus:outline-none focus:border-pink-400 transition" maxlength="20">
+        </div>
 
-<script>
-const canvas = document.getElementById("heart");
-const ctx = canvas.getContext("2d");
+        <div>
+            <label class="block text-xs uppercase tracking-wider text-pink-300 mb-1">Glow Color</label>
+            <div class="flex gap-2">
+                <input type="color" id="colorPicker" value="#ffb6c1" class="w-10 h-8 bg-transparent cursor-pointer rounded overflow-hidden">
+                <span id="colorHex" class="text-xs self-center font-mono text-pink-200">#ffb6c1</span>
+            </div>
+        </div>
 
-let width, height, scale, dpr;
-let rotation = 0;
-let lastTime = 0;
+        <div>
+            <label class="block text-xs uppercase tracking-wider text-pink-300 mb-1">Drawing Speed</label>
+            <input type="range" id="speedSlider" min="1" max="10" value="5" class="w-full accent-pink-400 cursor-pointer">
+        </div>
 
-const TAU = Math.PI * 2;
-const WORD_COUNT = 110;
+        <div>
+            <label class="block text-xs uppercase tracking-wider text-pink-300 mb-1">Layer Density</label>
+            <input type="range" id="densitySlider" min="3" max="8" value="6" class="w-full accent-pink-400 cursor-pointer">
+        </div>
 
-function heart(t) {
-  return {
-    x: 16 * Math.pow(Math.sin(t), 3),
-    y: -(13 * Math.cos(t)
-      - 5 * Math.cos(2 * t)
-      - 2 * Math.cos(3 * t)
-      - Math.cos(4 * t))
-  };
-}
+        <div class="pt-1 flex items-center justify-between">
+            <span class="text-xs text-pink-300">Pulse Effect</span>
+            <input type="checkbox" id="pulseToggle" checked class="accent-pink-400 w-4 h-4 cursor-pointer">
+        </div>
+    </div>
 
-function resize() {
-  dpr = Math.min(window.devicePixelRatio || 1, 2);
+    <!-- Footer Credit -->
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 text-center pointer-events-none">
+        <p class="text-xs text-pink-300/60 font-light tracking-widest glow-text">CREATED WITH PYTHON HEART ALGORITHM</p>
+    </div>
 
-  width = window.innerWidth;
-  height = window.innerHeight;
+    <script>
+        // Setup Canvas and Context
+        const canvas = document.getElementById('heartCanvas');
+        const ctx = canvas.getContext('2d');
 
-  canvas.width = Math.round(width * dpr);
-  canvas.height = Math.round(height * dpr);
+        // State Management
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
 
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        // Customization Settings
+        let customText = "I love you";
+        let mainColor = "#ffb6c1";
+        let drawSpeed = 5;
+        let layerCount = 6;
+        let enablePulse = true;
 
-  scale = Math.min(width / 39, height / 43, 16);
-}
+        // Animation State variables
+        let progress = 0; // 0 to 1 representing drawing completeness
+        let animationFrameId = null;
+        let time = 0;
 
-function draw(timestamp) {
-  if (!lastTime) lastTime = timestamp;
+        // Mouse Interactivity
+        let mouseX = width / 2;
+        let mouseY = height / 2;
+        let targetX = width / 2;
+        let targetY = height / 2;
 
-  const delta = Math.min(timestamp - lastTime, 40);
-  lastTime = timestamp;
+        // Background floating particles
+        const particles = [];
+        const PARTICLE_COUNT = 60;
 
-  ctx.clearRect(0, 0, width, height);
+        // Resize Canvas dynamically
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initParticles();
+        });
 
-  // Continuous rotation
-  rotation += delta * 0.00035;
+        // Track mouse for subtle interactive tilt/parallax
+        window.addEventListener('mousemove', (e) => {
+            targetX = e.clientX;
+            targetY = e.clientY;
+        });
 
-  // Keep the heart above the birthday message
-  ctx.save();
-  ctx.translate(width / 2, height * 0.40);
-  ctx.rotate(rotation);
-  ctx.scale(scale, scale);
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                targetX = e.touches[0].clientX;
+                targetY = e.touches[0].clientY;
+            }
+        });
 
-  for (let i = 0; i < WORD_COUNT; i++) {
-    // Text continuously travels around the heart
-    const t = (i / WORD_COUNT * TAU
-      + timestamp * 0.00045) % TAU;
+        // Initialize Background Particles
+        class Particle {
+            constructor() {
+                this.reset();
+            }
 
-    const p = heart(t);
-    const next = heart(t + 0.002);
+            reset() {
+                this.x = Math.random() * width;
+                this.y = height + 20 + Math.random() * 50;
+                this.size = Math.random() * 12 + 6;
+                this.speedY = Math.random() * 1.2 + 0.3;
+                this.speedX = (Math.random() - 0.5) * 0.5;
+                this.opacity = Math.random() * 0.5 + 0.1;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotSpeed = (Math.random() - 0.5) * 0.02;
+            }
 
-    const angle = Math.atan2(
-      next.y - p.y,
-      next.x - p.x
-    );
+            update() {
+                this.y -= this.speedY;
+                this.x += this.speedX + Math.sin(this.y * 0.01) * 0.3;
+                this.rotation += this.rotSpeed;
 
-    ctx.save();
-    ctx.translate(p.x, p.y);
-    ctx.rotate(angle);
+                if (this.y < -30) {
+                    this.reset();
+                }
+            }
 
-    const brightness = 0.65 + 0.35 *
-      Math.sin(t * 5 - timestamp * 0.004);
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = mainColor;
+                
+                // Draw tiny heart path
+                ctx.beginPath();
+                const topCurveHeight = this.size * 0.3;
+                ctx.moveTo(0, topCurveHeight);
+                ctx.bezierCurveTo(0, 0, -this.size / 2, 0, -this.size / 2, topCurveHeight);
+                ctx.bezierCurveTo(-this.size / 2, (this.size + topCurveHeight) / 2, 0, this.size, 0, this.size);
+                ctx.bezierCurveTo(0, this.size, this.size / 2, (this.size + topCurveHeight) / 2, this.size / 2, topCurveHeight);
+                ctx.bezierCurveTo(this.size / 2, 0, 0, 0, 0, topCurveHeight);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+        }
 
-    ctx.globalAlpha = brightness;
-    ctx.fillStyle = "#ff9dcc";
-    ctx.shadowColor = "#ff168d";
-    ctx.shadowBlur = 1.2;
+        function initParticles() {
+            particles.length = 0;
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                const p = new Particle();
+                p.y = Math.random() * height; // Spread across screen initially
+                particles.push(p);
+            }
+        }
 
-    ctx.font = "bold 0.8px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("I love you", 0, 0);
+        // Heart Parametric Formula Math
+        // Based on Python code:
+        // t in [0, 2pi]
+        // x = 16 * sin(t)^3
+        // y = 13*cos(t) - 5*cos(2t) - 2*cos(3t) - cos(4t)
+        function getHeartPoint(t) {
+            const sinT = Math.sin(t);
+            const x = 16 * Math.pow(sinT, 3);
+            const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)); // Invert y for canvas coords
+            return { x, y };
+        }
 
-    ctx.restore();
-  }
+        // Main Draw Loop
+        function animate() {
+            time += 0.02;
 
-  ctx.restore();
+            // Smooth mouse interpolation
+            mouseX += (targetX - mouseX) * 0.05;
+            mouseY += (targetY - mouseY) * 0.05;
 
-  requestAnimationFrame(draw);
-}
+            // Clear Screen
+            ctx.fillStyle = "rgba(0, 0, 0, 0.25)"; // Trails effect
+            ctx.fillRect(0, 0, width, height);
 
-window.addEventListener("resize", resize);
+            // Update & Render background floating particles
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
 
-resize();
-requestAnimationFrame(draw);
-</script>
+            // Increment Drawing Progress
+            if (progress < 1) {
+                progress += 0.002 * drawSpeed;
+                if (progress > 1) progress = 1;
+            }
 
+            // Calculate Pulse Scaling
+            let pulse = 1;
+            if (enablePulse && progress >= 1) {
+                pulse = 1 + Math.sin(time * 3) * 0.03 + Math.sin(time * 1.5) * 0.015;
+            }
+
+            // Interactive Offset based on Mouse position relative to center
+            const offsetX = (mouseX - width / 2) * 0.03;
+            const offsetY = (mouseY - height / 2) * 0.03;
+
+            // Base Scale according to screen size
+            const baseScale = Math.min(width, height) / 45 * pulse;
+            const centerX = width / 2 + offsetX;
+            const centerY = height / 2 + offsetY;
+
+            // Configure Text rendering
+            ctx.font = "bold 9px Arial, sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            // Set up glowing canvas filter effects
+            ctx.shadowColor = mainColor;
+            ctx.shadowBlur = 12;
+            ctx.fillStyle = mainColor;
+
+            const totalPointsPerLayer = 120;
+            const currentPointsToDraw = Math.floor(totalPointsPerLayer * progress);
+
+            // Scale layers (Range similar to Python loop: scale in range(11, 17))
+            const minScaleFactor = 0.7;
+            const maxScaleFactor = 1.15;
+
+            for (let layer = 0; layer < layerCount; layer++) {
+                // Calculate layer scale multiplier
+                const layerFactor = minScaleFactor + (layer / Math.max(1, layerCount - 1)) * (maxScaleFactor - minScaleFactor);
+                const currentScale = baseScale * layerFactor;
+
+                // Alternate rotation/opacity slightly per layer for depth
+                const alpha = 0.6 + (layer / layerCount) * 0.4;
+                ctx.globalAlpha = alpha;
+
+                for (let i = 0; i < currentPointsToDraw; i++) {
+                    const t = (i * Math.PI * 2) / totalPointsPerLayer;
+                    const point = getHeartPoint(t);
+
+                    const px = centerX + point.x * currentScale;
+                    const py = centerY + point.y * currentScale;
+
+                    // Calculate rotation angle along the curve for natural text orientation
+                    const nextPoint = getHeartPoint(t + 0.05);
+                    const angle = Math.atan2((nextPoint.y - point.y), (nextPoint.x - point.x));
+
+                    ctx.save();
+                    ctx.translate(px, py);
+                    // Slight dynamic tilt following curve direction
+                    ctx.rotate(angle * 0.15); 
+                    ctx.fillText(customText, 0, 0);
+                    ctx.restore();
+                }
+            }
+
+            ctx.globalAlpha = 1.0;
+            ctx.shadowBlur = 0;
+
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+        // Reset & Start Animation Sequence
+        function restartAnimation() {
+            progress = 0;
+        }
+
+        // Initial setup
+        initParticles();
+        animate();
+
+        // --- UI Controller Event Listeners ---
+        const controlsPanel = document.getElementById('controlsPanel');
+        const toggleControlsBtn = document.getElementById('toggleControlsBtn');
+        const closeControlsBtn = document.getElementById('closeControlsBtn');
+        const replayBtn = document.getElementById('replayBtn');
+        const messageInput = document.getElementById('messageInput');
+        const colorPicker = document.getElementById('colorPicker');
+        const colorHex = document.getElementById('colorHex');
+        const speedSlider = document.getElementById('speedSlider');
+        const densitySlider = document.getElementById('densitySlider');
+        const pulseToggle = document.getElementById('pulseToggle');
+
+        toggleControlsBtn.addEventListener('click', () => {
+            controlsPanel.classList.toggle('hidden');
+        });
+
+        closeControlsBtn.addEventListener('click', () => {
+            controlsPanel.classList.add('hidden');
+        });
+
+        replayBtn.addEventListener('click', () => {
+            restartAnimation();
+        });
+
+        messageInput.addEventListener('input', (e) => {
+            customText = e.target.value.trim() || "I love you";
+        });
+
+        colorPicker.addEventListener('input', (e) => {
+            mainColor = e.target.value;
+            colorHex.textContent = mainColor;
+        });
+
+        speedSlider.addEventListener('input', (e) => {
+            drawSpeed = parseInt(e.target.value);
+        });
+
+        densitySlider.addEventListener('input', (e) => {
+            layerCount = parseInt(e.target.value);
+        });
+
+        pulseToggle.addEventListener('change', (e) => {
+            enablePulse = e.target.checked;
+        });
+    </script>
 </body>
 </html>
+```
