@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>I Love You - Heart Animation</title>
+    <title>Happy Birthday Hansa - Heart Animation</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -29,6 +29,23 @@
             text-shadow: 0 0 10px rgba(255, 182, 193, 0.8), 0 0 20px rgba(255, 105, 180, 0.5);
         }
 
+        /* Floating birthday title animation */
+        .bday-title {
+            text-shadow: 0 0 10px rgba(255, 105, 180, 0.8),
+                         0 0 20px rgba(255, 182, 193, 0.6),
+                         0 0 30px rgba(255, 215, 0, 0.5);
+            animation: floatBanner 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatBanner {
+            0% {
+                transform: translateY(0px) scale(1);
+            }
+            100% {
+                transform: translateY(-8px) scale(1.03);
+            }
+        }
+
         /* Glassmorphism control panel */
         .glass-panel {
             background: rgba(15, 15, 20, 0.65);
@@ -42,6 +59,13 @@
 
     <!-- Canvas for the animated heart and background particles -->
     <canvas id="heartCanvas"></canvas>
+
+    <!-- Happy Birthday Animated Banner at Top Center -->
+    <div class="absolute top-6 left-1/2 -translate-x-1/2 z-10 text-center pointer-events-none w-full px-4">
+        <h1 class="bday-title text-2xl md:text-4xl lg:text-5xl font-extrabold tracking-wider bg-gradient-to-r from-pink-300 via-rose-300 to-amber-200 bg-clip-text text-transparent">
+            ✨ Happy Birthday Hansa 🎉
+        </h1>
+    </div>
 
     <!-- Overlay UI Controls -->
     <div class="absolute top-4 left-4 z-10 flex flex-wrap gap-3 items-center">
@@ -123,9 +147,9 @@
         let targetX = width / 2;
         let targetY = height / 2;
 
-        // Background floating particles
+        // Background floating particles & sparkles
         const particles = [];
-        const PARTICLE_COUNT = 60;
+        const PARTICLE_COUNT = 70;
 
         // Resize Canvas dynamically
         window.addEventListener('resize', () => {
@@ -147,7 +171,7 @@
             }
         });
 
-        // Initialize Background Particles
+        // Initialize Background Particles & Sparkles
         class Particle {
             constructor() {
                 this.reset();
@@ -162,6 +186,7 @@
                 this.opacity = Math.random() * 0.5 + 0.1;
                 this.rotation = Math.random() * Math.PI * 2;
                 this.rotSpeed = (Math.random() - 0.5) * 0.02;
+                this.isSparkle = Math.random() > 0.6; // Mix of hearts and sparkles
             }
 
             update() {
@@ -179,18 +204,29 @@
                 ctx.translate(this.x, this.y);
                 ctx.rotate(this.rotation);
                 ctx.globalAlpha = this.opacity;
-                ctx.fillStyle = mainColor;
+                ctx.fillStyle = this.isSparkle ? '#ffe4e1' : mainColor;
                 
-                // Draw tiny heart path
-                ctx.beginPath();
-                const topCurveHeight = this.size * 0.3;
-                ctx.moveTo(0, topCurveHeight);
-                ctx.bezierCurveTo(0, 0, -this.size / 2, 0, -this.size / 2, topCurveHeight);
-                ctx.bezierCurveTo(-this.size / 2, (this.size + topCurveHeight) / 2, 0, this.size, 0, this.size);
-                ctx.bezierCurveTo(0, this.size, this.size / 2, (this.size + topCurveHeight) / 2, this.size / 2, topCurveHeight);
-                ctx.bezierCurveTo(this.size / 2, 0, 0, 0, 0, topCurveHeight);
-                ctx.closePath();
-                ctx.fill();
+                if (this.isSparkle) {
+                    // Draw tiny festive sparkle star
+                    ctx.beginPath();
+                    for (let i = 0; i < 4; i++) {
+                        ctx.lineTo(0, -this.size * 0.4);
+                        ctx.quadraticCurveTo(0, 0, this.size * 0.4, 0);
+                        ctx.rotate(Math.PI / 2);
+                    }
+                    ctx.fill();
+                } else {
+                    // Draw tiny heart path
+                    ctx.beginPath();
+                    const topCurveHeight = this.size * 0.3;
+                    ctx.moveTo(0, topCurveHeight);
+                    ctx.bezierCurveTo(0, 0, -this.size / 2, 0, -this.size / 2, topCurveHeight);
+                    ctx.bezierCurveTo(-this.size / 2, (this.size + topCurveHeight) / 2, 0, this.size, 0, this.size);
+                    ctx.bezierCurveTo(0, this.size, this.size / 2, (this.size + topCurveHeight) / 2, this.size / 2, topCurveHeight);
+                    ctx.bezierCurveTo(this.size / 2, 0, 0, 0, 0, topCurveHeight);
+                    ctx.closePath();
+                    ctx.fill();
+                }
                 ctx.restore();
             }
         }
@@ -205,8 +241,6 @@
         }
 
         // Heart Parametric Formula Math
-        // Based on Python code:
-        // t in [0, 2pi]
         // x = 16 * sin(t)^3
         // y = 13*cos(t) - 5*cos(2t) - 2*cos(3t) - cos(4t)
         function getHeartPoint(t) {
@@ -248,10 +282,10 @@
 
             // Interactive Offset based on Mouse position relative to center
             const offsetX = (mouseX - width / 2) * 0.03;
-            const offsetY = (mouseY - height / 2) * 0.03;
+            const offsetY = (mouseY - height / 2) * 0.03 + 15; // Slightly shifted down to accommodate top header
 
             // Base Scale according to screen size
-            const baseScale = Math.min(width, height) / 45 * pulse;
+            const baseScale = Math.min(width, height) / 48 * pulse;
             const centerX = width / 2 + offsetX;
             const centerY = height / 2 + offsetY;
 
