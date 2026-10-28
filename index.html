@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,6 +21,21 @@
             display: block;
             width: 100vw;
             height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+        }
+
+        /* Background Image Styling */
+        #bgContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            object-fit: cover;
         }
 
         /* Subtle glowing text animation for UI overlays */
@@ -57,6 +71,10 @@
 </head>
 <body class="bg-black text-white relative">
 
+    <!-- Background Image with Dark Overlay (REPLACE YOUR_IMAGE_URL_HERE WITH YOUR LINK) -->
+    <img id="bgContainer" src="https://kommodo.ai/i/FxOCvuclnSKqKEzbsKsM" alt="Background Collage">
+    <div class="fixed inset-0 bg-black/50 z-1 pointer-events-none"></div>
+
     <!-- Canvas for the animated heart and background particles -->
     <canvas id="heartCanvas"></canvas>
 
@@ -68,7 +86,7 @@
     </div>
 
     <!-- Overlay UI Controls -->
-    <div class="absolute top-4 left-4 z-10 flex flex-wrap gap-3 items-center">
+    <div class="absolute top-4 left-4 z-20 flex flex-wrap gap-3 items-center">
         <button id="toggleControlsBtn" class="glass-panel text-pink-200 hover:text-white px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 hover:scale-105 flex items-center gap-2 cursor-pointer">
             <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
             <span>Customize</span>
@@ -80,7 +98,7 @@
     </div>
 
     <!-- Hidden Customization Panel -->
-    <div id="controlsPanel" class="hidden absolute top-16 left-4 z-20 glass-panel p-5 rounded-2xl w-80 text-pink-100 space-y-4 transition-all duration-300">
+    <div id="controlsPanel" class="hidden absolute top-16 left-4 z-30 glass-panel p-5 rounded-2xl w-80 text-pink-100 space-y-4 transition-all duration-300">
         <h3 class="text-lg font-bold text-pink-300 border-b border-pink-500/20 pb-2 flex justify-between items-center">
             <span>Animation Settings</span>
             <button id="closeControlsBtn" class="text-xs text-gray-400 hover:text-white">✕</button>
@@ -100,6 +118,11 @@
         </div>
 
         <div>
+            <label class="block text-xs uppercase tracking-wider text-pink-300 mb-1">Background Image</label>
+            <input type="file" id="bgUpload" accept="image/*" class="w-full text-xs text-pink-200 file:mr-2 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-pink-500/20 file:text-pink-300 hover:file:bg-pink-500/30 cursor-pointer">
+        </div>
+
+        <div>
             <label class="block text-xs uppercase tracking-wider text-pink-300 mb-1">Drawing Speed</label>
             <input type="range" id="speedSlider" min="1" max="10" value="5" class="w-full accent-pink-400 cursor-pointer">
         </div>
@@ -116,7 +139,7 @@
     </div>
 
     <!-- Footer Credit -->
-    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 text-center pointer-events-none">
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 text-center pointer-events-none">
         <p class="text-xs text-pink-300/60 font-light tracking-widest glow-text">CREATED WITH PYTHON HEART ALGORITHM</p>
     </div>
 
@@ -137,7 +160,7 @@
         let enablePulse = true;
 
         // Animation State variables
-        let progress = 0; // 0 to 1 representing drawing completeness
+        let progress = 0; 
         let animationFrameId = null;
         let time = 0;
 
@@ -186,7 +209,7 @@
                 this.opacity = Math.random() * 0.5 + 0.1;
                 this.rotation = Math.random() * Math.PI * 2;
                 this.rotSpeed = (Math.random() - 0.5) * 0.02;
-                this.isSparkle = Math.random() > 0.6; // Mix of hearts and sparkles
+                this.isSparkle = Math.random() > 0.6;
             }
 
             update() {
@@ -207,7 +230,6 @@
                 ctx.fillStyle = this.isSparkle ? '#ffe4e1' : mainColor;
                 
                 if (this.isSparkle) {
-                    // Draw tiny festive sparkle star
                     ctx.beginPath();
                     for (let i = 0; i < 4; i++) {
                         ctx.lineTo(0, -this.size * 0.4);
@@ -216,7 +238,6 @@
                     }
                     ctx.fill();
                 } else {
-                    // Draw tiny heart path
                     ctx.beginPath();
                     const topCurveHeight = this.size * 0.3;
                     ctx.moveTo(0, topCurveHeight);
@@ -235,18 +256,16 @@
             particles.length = 0;
             for (let i = 0; i < PARTICLE_COUNT; i++) {
                 const p = new Particle();
-                p.y = Math.random() * height; // Spread across screen initially
+                p.y = Math.random() * height;
                 particles.push(p);
             }
         }
 
         // Heart Parametric Formula Math
-        // x = 16 * sin(t)^3
-        // y = 13*cos(t) - 5*cos(2t) - 2*cos(3t) - cos(4t)
         function getHeartPoint(t) {
             const sinT = Math.sin(t);
             const x = 16 * Math.pow(sinT, 3);
-            const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)); // Invert y for canvas coords
+            const y = -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
             return { x, y };
         }
 
@@ -254,13 +273,11 @@
         function animate() {
             time += 0.02;
 
-            // Smooth mouse interpolation
             mouseX += (targetX - mouseX) * 0.05;
             mouseY += (targetY - mouseY) * 0.05;
 
-            // Clear Screen
-            ctx.fillStyle = "rgba(0, 0, 0, 0.25)"; // Trails effect
-            ctx.fillRect(0, 0, width, height);
+            // Clear Screen transparently so background image shines through
+            ctx.clearRect(0, 0, width, height);
 
             // Update & Render background floating particles
             particles.forEach(p => {
@@ -268,33 +285,27 @@
                 p.draw();
             });
 
-            // Increment Drawing Progress
             if (progress < 1) {
                 progress += 0.002 * drawSpeed;
                 if (progress > 1) progress = 1;
             }
 
-            // Calculate Pulse Scaling
             let pulse = 1;
             if (enablePulse && progress >= 1) {
                 pulse = 1 + Math.sin(time * 3) * 0.03 + Math.sin(time * 1.5) * 0.015;
             }
 
-            // Interactive Offset based on Mouse position relative to center
             const offsetX = (mouseX - width / 2) * 0.03;
-            const offsetY = (mouseY - height / 2) * 0.03 + 15; // Slightly shifted down to accommodate top header
+            const offsetY = (mouseY - height / 2) * 0.03 + 15;
 
-            // Base Scale according to screen size
             const baseScale = Math.min(width, height) / 48 * pulse;
             const centerX = width / 2 + offsetX;
             const centerY = height / 2 + offsetY;
 
-            // Configure Text rendering
             ctx.font = "bold 9px Arial, sans-serif";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
 
-            // Set up glowing canvas filter effects
             ctx.shadowColor = mainColor;
             ctx.shadowBlur = 12;
             ctx.fillStyle = mainColor;
@@ -302,16 +313,13 @@
             const totalPointsPerLayer = 120;
             const currentPointsToDraw = Math.floor(totalPointsPerLayer * progress);
 
-            // Scale layers (Range similar to Python loop: scale in range(11, 17))
             const minScaleFactor = 0.7;
             const maxScaleFactor = 1.15;
 
             for (let layer = 0; layer < layerCount; layer++) {
-                // Calculate layer scale multiplier
                 const layerFactor = minScaleFactor + (layer / Math.max(1, layerCount - 1)) * (maxScaleFactor - minScaleFactor);
                 const currentScale = baseScale * layerFactor;
 
-                // Alternate rotation/opacity slightly per layer for depth
                 const alpha = 0.6 + (layer / layerCount) * 0.4;
                 ctx.globalAlpha = alpha;
 
@@ -322,13 +330,11 @@
                     const px = centerX + point.x * currentScale;
                     const py = centerY + point.y * currentScale;
 
-                    // Calculate rotation angle along the curve for natural text orientation
                     const nextPoint = getHeartPoint(t + 0.05);
                     const angle = Math.atan2((nextPoint.y - point.y), (nextPoint.x - point.x));
 
                     ctx.save();
                     ctx.translate(px, py);
-                    // Slight dynamic tilt following curve direction
                     ctx.rotate(angle * 0.15); 
                     ctx.fillText(customText, 0, 0);
                     ctx.restore();
@@ -341,12 +347,10 @@
             animationFrameId = requestAnimationFrame(animate);
         }
 
-        // Reset & Start Animation Sequence
         function restartAnimation() {
             progress = 0;
         }
 
-        // Initial setup
         initParticles();
         animate();
 
@@ -358,6 +362,8 @@
         const messageInput = document.getElementById('messageInput');
         const colorPicker = document.getElementById('colorPicker');
         const colorHex = document.getElementById('colorHex');
+        const bgUpload = document.getElementById('bgUpload');
+        const bgContainer = document.getElementById('bgContainer');
         const speedSlider = document.getElementById('speedSlider');
         const densitySlider = document.getElementById('densitySlider');
         const pulseToggle = document.getElementById('pulseToggle');
@@ -383,6 +389,14 @@
             colorHex.textContent = mainColor;
         });
 
+        bgUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                bgContainer.src = url;
+            }
+        });
+
         speedSlider.addEventListener('input', (e) => {
             drawSpeed = parseInt(e.target.value);
         });
@@ -397,4 +411,3 @@
     </script>
 </body>
 </html>
-```
